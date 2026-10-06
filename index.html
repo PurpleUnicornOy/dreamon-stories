@@ -212,7 +212,7 @@ const CONFIG = {
     matka: "assets/video/c4-matka.mp4", sali: "assets/video/c5-sali.mp4", gaala: "assets/video/c6-gaala.mp4"
   },
   /* Erilliset ääniraidat (videot itse ovat äänettömiä) */
-  audio: { lava: "assets/video/c2-lava.m4a", sali: "assets/video/c5-sali.m4a" },
+  audio: {},
   posters: {
     juhla: "assets/video/c1-juhla.jpg", lava: "assets/video/c2-lava.jpg", haastattelu: "assets/video/c3-haastattelu.jpg",
     matka: "assets/video/c4-matka.jpg", sali: "assets/video/c5-sali.jpg", gaala: "assets/video/c6-gaala.jpg"
@@ -313,7 +313,7 @@ function show(i){
   stage.classList.toggle("nozones", s.type === "wait");
   stage.classList.toggle("narrow", s.type === "video");
   shade.classList.toggle("full", s.type === "video");
-  soundBtn.hidden = false;
+  soundBtn.hidden = s.type !== "video";
   playVideo(s.v);
   bindScene();
 }
