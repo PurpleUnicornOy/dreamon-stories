@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="fi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Dream On Group hakee buukkaajia ja myyjiä ympäri Suomen. Tämä ei ole kaikille.">
+<meta property="og:title" content="Dream on. DO.">
+<meta property="og:description" content="Tämä ei ole kaikille. Mutta oikeille ihmisille tämä on iso mahdollisuus.">
+<meta property="og:image" content="assets/do-mark.png">
+<meta name="theme-color" content="#000000">
+<link rel="icon" href="assets/do-mark.png">
+<link rel="preload" href="assets/trade-gothic-bold.woff2" as="font" type="font/woff2" crossorigin>
+<!-- Meta Pixel ja TikTok Pixel tähän -->
+</head>
+<body>
+<title>Dream On. DO.</title>
+<style>
+@font-face{font-family:"TG";src:url(assets/trade-gothic-bold.woff2) format("woff2");font-weight:700;font-display:swap}
+/* Layout: koko sivu on pystysuora tarina (9:16). Mobiilissa koko ruutu, isolla näytöllä keskellä oleva tarinaikkuna mustalla brändipohjalla. */
+:root{
+  --black:#000; --ink:#0B0B0B; --panel:#141414; --slate:#293941; --steel:#8A9BA8; --orange:#EA5425; --cream:#FFF0D2; --white:#fff;
+  --muted:rgba(255,255,255,.66); --line:rgba(255,255,255,.16);
+  --display:"TG","Arial Narrow","Helvetica Neue",Arial,sans-serif;
+  --body:"Helvetica Neue",Helvetica,Arial,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{margin:0;background:var(--black);color:var(--white);font-family:var(--body);-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
+
+/* Ympäristö isolla näytöllä */
+.world{position:fixed;inset:0;display:grid;place-items:center;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);background:radial-gradient(60% 70% at 85% 100%,rgba(234,84,37,.22),transparent 60%),radial-gradient(50% 60% at 0% 0%,rgba(41,57,65,.5),transparent 70%),var(--black)}
+.world .ghost{position:fixed;right:-3vw;bottom:-6vw;font-family:var(--display);font-size:34vw;line-height:.8;color:rgba(255,255,255,.03);pointer-events:none;user-select:none}
+.side{position:fixed;font-family:var(--display);font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:var(--steel);display:none}
+.side.l{left:40px;top:50%;transform:translateY(-50%) rotate(-90deg);transform-origin:left center;margin-left:8px}
+.side.r{right:40px;bottom:40px}
+.side.tl{left:40px;top:36px;display:none;align-items:center;gap:12px;color:var(--white)}
+.mark{display:inline-block;width:40px;height:40px;background:url(assets/do-mark.png) center/contain no-repeat;flex:0 0 auto}
+@media (min-width:820px){.side{display:block}.side.tl{display:flex}}
+
+/* Tarinaikkuna */
+.stage{position:relative;container-type:size;width:100%;height:100%;overflow:hidden;background:var(--black);user-select:none;touch-action:manipulation}
+@media (min-width:820px){.stage{width:min(460px,calc(92vh * 9 / 16));height:min(92vh,818px);border:1px solid var(--line);box-shadow:0 40px 120px rgba(0,0,0,.7)}}
+.bars{position:absolute;top:calc(10px + env(safe-area-inset-top,0px));left:12px;right:12px;display:flex;gap:4px;z-index:5}
+@media (min-width:820px){.bars{top:12px}}
+.bars i{flex:1;height:2px;background:rgba(255,255,255,.22);overflow:hidden}
+.bars i b{display:block;height:100%;width:0;background:var(--white)}
+.bars i.done b{width:100%}
+.topbar{position:absolute;top:calc(22px + env(safe-area-inset-top,0px));left:12px;right:12px;display:flex;align-items:center;justify-content:space-between;z-index:5}
+@media (min-width:820px){.topbar{top:24px}}
+.who{display:flex;align-items:center;gap:10px;font-family:var(--display);font-size:13px;letter-spacing:.14em}
+.who .mark{width:30px;height:30px}
+.who small{font-family:var(--body);letter-spacing:0;font-size:12px;color:var(--muted);text-transform:none}
+.skip{font-family:var(--display);font-size:12px;letter-spacing:.16em;text-transform:uppercase;padding:9px 12px;border:1px solid rgba(255,255,255,.4)}
+.skip:hover{background:var(--white);color:var(--black)}
+
+.scene{position:absolute;inset:0;padding:96px 26px 34px;display:flex;flex-direction:column;justify-content:center;gap:22px;opacity:0;pointer-events:none;transition:opacity .35s ease}
+.scene.on{opacity:1;pointer-events:auto}
+.scene .bg{position:absolute;inset:0;z-index:-1}
+.tapzone{position:absolute;top:80px;bottom:0;width:34%;z-index:2}
+.tapzone.prev{left:0}.tapzone.next{right:0;width:66%}
+.stage.narrow .tapzone{width:14%}
+.stage.nozones .tapzone{display:none}
+.scene .front{position:relative;z-index:3}
+
+.eyebrow{font-family:var(--display);font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:var(--orange)}
+.big{font-family:var(--display);font-weight:700;font-size:clamp(40px,13cqw,72px);line-height:.92;margin:0}
+.huge{font-family:var(--display);font-weight:700;font-size:clamp(56px,19cqw,104px);line-height:.88;margin:0}
+.mid{font-family:var(--display);font-weight:700;font-size:clamp(30px,9.5cqw,48px);line-height:.98;text-transform:uppercase;margin:0}
+.o{color:var(--orange)}
+.lead{font-size:18px;line-height:1.45;color:var(--muted);max-width:30ch}
+.hint{position:absolute;left:0;right:0;bottom:calc(26px + env(safe-area-inset-bottom,0px));text-align:center;font-family:var(--display);font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--steel);z-index:3;pointer-events:none}
+.hint i{display:inline-block;width:6px;height:6px;border-right:1px solid;border-bottom:1px solid;transform:rotate(-45deg);margin-left:8px;animation:nudge 1.4s ease-in-out infinite}
+@keyframes nudge{50%{transform:translateX(4px) rotate(-45deg)}}
+
+/* Sisääntulo: rivit nousevat */
+.rise>*{opacity:0;transform:translateY(16px)}
+.scene.on .rise>*{animation:rise .7s cubic-bezier(.2,.8,.2,1) forwards}
+.scene.on .rise>*:nth-child(2){animation-delay:.18s}.scene.on .rise>*:nth-child(3){animation-delay:.36s}.scene.on .rise>*:nth-child(4){animation-delay:.54s}.scene.on .rise>*:nth-child(5){animation-delay:.72s}
+@keyframes rise{to{opacity:1;transform:none}}
+
+/* Vastauspainikkeet */
+.choices{display:grid;gap:10px;margin-top:8px}
+.choice{display:flex;justify-content:space-between;align-items:center;padding:20px 20px;border:1px solid rgba(255,255,255,.4);font-family:var(--display);font-size:18px;letter-spacing:.1em;text-transform:uppercase;text-align:left;transition:background .2s,border-color .2s,color .2s}
+.choice:hover,.choice.sel{background:var(--orange);border-color:var(--orange)}
+.choice span{font-family:var(--body);letter-spacing:0;text-transform:none;font-size:14px;color:var(--muted)}
+.choice:hover span,.choice.sel span{color:var(--white)}
+
+/* Kulmakehys */
+.frame{--c:var(--orange);--s:20px;background:
+  linear-gradient(var(--c),var(--c)) top left/var(--s) 2px no-repeat,linear-gradient(var(--c),var(--c)) top left/2px var(--s) no-repeat,
+  linear-gradient(var(--c),var(--c)) top right/var(--s) 2px no-repeat,linear-gradient(var(--c),var(--c)) top right/2px var(--s) no-repeat,
+  linear-gradient(var(--c),var(--c)) bottom left/var(--s) 2px no-repeat,linear-gradient(var(--c),var(--c)) bottom left/2px var(--s) no-repeat,
+  linear-gradient(var(--c),var(--c)) bottom right/var(--s) 2px no-repeat,linear-gradient(var(--c),var(--c)) bottom right/2px var(--s) no-repeat}
+
+/* Faktat */
+.facts{border-top:1px solid var(--line);margin:0}
+.facts div{display:flex;justify-content:space-between;gap:16px;padding-block:14px;border-bottom:1px solid var(--line)}
+.facts dt{font-family:var(--display);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--steel);padding-top:3px}
+.facts dd{margin:0;text-align:right;font-size:16px}
+
+/* Polku */
+.path{display:grid;gap:0;border-left:1px solid var(--line);margin-left:4px}
+.path div{position:relative;padding:0 0 20px 22px}
+.path div::before{content:"";position:absolute;left:-4px;top:8px;width:7px;height:7px;background:var(--steel)}
+.path div.now::before{background:var(--orange);width:9px;height:9px;left:-5px}
+.path b{display:block;margin-bottom:4px;font-family:var(--display);font-size:11px;letter-spacing:.2em;color:var(--steel)}
+.path div.now b{color:var(--orange)}
+.path span{font-family:var(--display);font-size:28px;text-transform:uppercase;line-height:1.05}
+.path div:not(.now) span{color:rgba(255,255,255,.55)}
+
+/* Video */
+.vwrap{position:relative;width:100%;flex:1;min-height:0;max-height:62vh;display:flex;flex-direction:column}
+.vwrap iframe{width:100%;height:100%;border:0;background:var(--panel);flex:1}
+.vcard{flex:1;display:flex;flex-direction:column;justify-content:space-between;padding:26px;background-color:var(--panel);text-decoration:none;min-height:300px;position:relative;overflow:hidden}
+.vcard::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(135deg,transparent 0 40px,rgba(255,255,255,.03) 40px 41px)}
+.vcard>*{position:relative}
+.vcard .views{font-family:var(--display);font-size:52px;line-height:.9}
+.vcard .views small{display:block;font-size:11px;letter-spacing:.2em;color:var(--steel);margin-top:8px}
+.vcard .play{width:64px;height:64px;border-radius:50%;border:1px solid rgba(255,255,255,.6);display:grid;place-items:center;align-self:center}
+.vcard .play::before{content:"";border-left:16px solid var(--white);border-block:10px solid transparent;margin-left:4px}
+.vcard .go{display:flex;justify-content:space-between;font-family:var(--display);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
+.vcap{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.vcap .mid{font-size:clamp(24px,7cqw,32px)}
+.vcap a{font-family:var(--display);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+
+/* Paikkakunnat */
+.cities{display:flex;flex-wrap:wrap;gap:8px;max-height:44vh;overflow:auto;padding-right:4px}
+.city{padding:11px 14px;border:1px solid rgba(255,255,255,.3);font-size:15px;transition:background .2s,border-color .2s}
+.city:hover,.city.sel{background:var(--orange);border-color:var(--orange)}
+
+/* CTA */
+.cta{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;padding:20px;background:var(--orange);font-family:var(--display);font-size:18px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none;color:var(--white);transition:background .2s,color .2s}
+.cta:hover{background:var(--white);color:var(--black)}
+.textbtn{font-family:var(--display);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);padding-block:8px;border-bottom:1px solid rgba(255,255,255,.3);align-self:flex-start}
+.row{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center}
+.final .frame{padding:28px 22px;display:grid;gap:18px}
+.pillars{display:flex;align-items:center;gap:12px;font-family:var(--display);font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--steel)}
+.pillars i{flex:0 0 26px;height:1px;background:var(--line)}
+
+.diag{background:var(--orange) repeating-linear-gradient(135deg,transparent 0 40px,rgba(0,0,0,.14) 40px 41px)}
+.diag .eyebrow{color:var(--black)}
+.diag .lead{color:rgba(255,255,255,.9)}
+.glow{background:radial-gradient(80% 60% at 100% 100%,rgba(234,84,37,.35),transparent 60%),var(--black)}
+.slate{background:radial-gradient(80% 60% at 0% 0%,rgba(41,57,65,.9),transparent 70%),var(--black)}
+
+
+/* Videotaustat */
+.vlayer{position:absolute;inset:0;z-index:0;background:var(--black)}
+.vlayer video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .5s ease}
+.vlayer video.on{opacity:1}
+.shade{position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,.6) 0,rgba(0,0,0,.05) 30%,rgba(0,0,0,.25) 55%,rgba(0,0,0,.92) 100%)}
+.shade.full{background:linear-gradient(180deg,rgba(0,0,0,.55) 0,rgba(0,0,0,0) 22%,rgba(0,0,0,0) 70%,rgba(0,0,0,.75) 100%)}
+.scene{z-index:2;justify-content:flex-end;padding-bottom:calc(40px + env(safe-area-inset-bottom,0px))}
+.scene.top{justify-content:flex-start}
+.sound{position:absolute;right:16px;bottom:calc(96px + env(safe-area-inset-bottom,0px));z-index:6;display:flex;align-items:center;gap:8px;font-family:var(--display);font-size:12px;letter-spacing:.16em;text-transform:uppercase;padding:12px 14px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.4);backdrop-filter:blur(6px)}
+.sound[hidden]{display:none}
+.lead{color:rgba(255,255,255,.82)}
+.choice{background:rgba(0,0,0,.45);backdrop-filter:blur(6px)}
+.city{background:rgba(0,0,0,.45);backdrop-filter:blur(6px)}
+.facts{background:rgba(0,0,0,.35);backdrop-filter:blur(6px);padding-inline:14px}
+/* Lomake */
+.scene.scroll{overflow-y:auto;justify-content:flex-start;padding-top:max(96px,22vh)}
+.scene .eyebrow{text-shadow:0 1px 12px rgba(0,0,0,.9)}
+.scene .huge,.scene .big,.scene .mid{text-shadow:0 2px 24px rgba(0,0,0,.5)}
+.lead-form{margin-top:14px;display:grid;gap:10px;padding:18px;background:rgba(0,0,0,.6);backdrop-filter:blur(10px);border:1px solid var(--line)}
+.formhead{font-size:15px;color:rgba(255,255,255,.85);margin:0 0 4px}
+.fld{display:grid;gap:4px}
+.fld span{font-family:var(--display);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--steel)}
+.fld input{width:100%;font:16px var(--body);color:var(--white);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.25);border-radius:0;padding:12px}
+.fld input:focus{border-color:var(--orange);outline:none}
+.consent{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;font-size:13px;color:var(--muted);line-height:1.4}
+.consent input{width:18px;height:18px;margin-top:1px;accent-color:var(--orange)}
+.consent a{color:var(--white)}
+.ferr{margin:0;min-height:1.2em;font-size:14px;color:var(--orange)}
+.cta:disabled{opacity:.6;cursor:wait}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.rise>*{opacity:1;transform:none}}
+</style>
+
+<div class="world">
+  <span class="ghost" aria-hidden="true">DO.</span>
+  <div class="side tl"><span class="mark"></span><span>Dream On Group</span></div>
+  <div class="side l">Ihminen · Kehitys · Laatu</div>
+  <div class="side r">@dream.on.group</div>
+  <main class="stage" id="stage" aria-roledescription="tarina">
+    <div class="bars" id="bars"></div>
+    <div class="topbar"><div class="who"><span class="mark"></span><div>DREAM ON.<br><small id="ago">Haku auki</small></div></div><button class="skip" type="button" id="skip">Hae suoraan</button></div>
+    <div class="vlayer" id="vlayer"></div><div class="shade" id="shade"></div>
+    <div id="scenes"></div>
+    <button class="sound" type="button" id="sound" hidden>Ääni päälle</button>
+    <div class="tapzone prev" id="tprev" aria-hidden="true"></div>
+    <div class="tapzone next" id="tnext" aria-hidden="true"></div>
+  </main>
+</div>
+
+<script>
+/* ===== MUOKATTAVAT TIEDOT ===== */
+const CONFIG = {
+  links: {
+    buukkaaja: "https://dreamongroup.teamtailor.com/jobs",
+    myyja: "https://dreamongroup.teamtailor.com/jobs"
+  },
+  instagram: "https://www.instagram.com/dream.on.group/",
+  /* Lomakkeen vastaanottaja: Make- tai Zapier-webhookin osoite. Tyhjänä lomake toimii esikatselutilassa (ei lähetä mitään). */
+  webhook: "https://hooks.zapier.com/hooks/catch/25530884/4m0lq6a/",
+  privacyUrl: "https://dreamongroup.fi/tietosuojaseloste",
+  videos: {
+    juhla: "assets/video/c1-juhla.mp4", lava: "assets/video/c2-lava.mp4", haastattelu: "assets/video/c3-haastattelu.mp4",
+    matka: "assets/video/c4-matka.mp4", sali: "assets/video/c5-sali.mp4", gaala: "assets/video/c6-gaala.mp4"
+  },
+  posters: {
+    juhla: "assets/video/c1-juhla.jpg", lava: "assets/video/c2-lava.jpg", haastattelu: "assets/video/c3-haastattelu.jpg",
+    matka: "assets/video/c4-matka.jpg", sali: "assets/video/c5-sali.jpg", gaala: "assets/video/c6-gaala.jpg"
+  },
+  cities: [
+    ["Oulu","Oulusta"],["Kuopio","Kuopiosta"],["Seinäjoki","Seinäjoelta"],["Joensuu","Joensuusta"],["Turku","Turusta"],
+    ["Tampere","Tampereelta"],["Helsinki","Helsingistä"],["Espoo","Espoosta"],["Vantaa","Vantaalta"]
+  ],
+  sceneSeconds: 4.5
+};
+</script>
+<script>
+(function(){
+"use strict";
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let params; try { params = new URLSearchParams(location.search); } catch (e) { params = new URLSearchParams(); }
+const slug = s => s.toLowerCase().replace(/ä/g,"a").replace(/ö/g,"o").replace(/å/g,"a").replace(/[^a-z]/g,"");
+const S = { role: null, city: null, sent: null };
+const pre = params.get("kaupunki");
+if (pre) { const c = CONFIG.cities.find(c => slug(c[0]) === slug(pre)); if (c) S.city = c; }
+
+function applyLink(){
+  const role = S.role || "buukkaaja";
+  let url; try { url = new URL(CONFIG.links[role]); } catch (e) { return CONFIG.links[role]; }
+  params.forEach((v,k) => { if (k.indexOf("utm_") === 0) url.searchParams.set(k, v); });
+  if (!url.searchParams.get("utm_source")) url.searchParams.set("utm_source", "do-stories");
+  url.searchParams.set("utm_content", role + (S.city ? "_" + slug(S.city[0]) : ""));
+  return url.toString();
+}
+
+/* ===== Videot: luodaan kerran, vaihdetaan näkyvää ===== */
+const vlayer = $("#vlayer"), V = {};
+Object.keys(CONFIG.videos).forEach(k => {
+  const v = document.createElement("video");
+  v.src = CONFIG.videos[k]; v.poster = CONFIG.posters[k] || "";
+  v.muted = true; v.playsInline = true; v.setAttribute("playsinline", ""); v.preload = k === "juhla" ? "auto" : "metadata";
+  v.loop = k !== "haastattelu";
+  vlayer.appendChild(v); V[k] = v;
+});
+let currentV = null;
+function playVideo(k){
+  Object.keys(V).forEach(n => { if (n !== k) { V[n].classList.remove("on"); V[n].pause(); } });
+  const v = V[k]; currentV = v; if (!v) return;
+  v.classList.add("on");
+  if (k === "haastattelu") { try { v.currentTime = 0; } catch (e) {} }
+  const p = v.play(); if (p && p.catch) p.catch(() => {});
+}
+
+/* ===== Ruudut ===== */
+function scenes(){
+  const b = S.role === "myyja"; const roleName = b ? "Myyjä" : "Buukkaaja";
+  return [
+    { id:"q1", type:"wait", v:"juhla", html:`<div class="front rise"><span class="eyebrow">Haku auki · Koko Suomi</span><h1 class="huge">Dream on.<br><span class="o">DO.</span></h1><p class="lead">Tämä ei ole kaikille. Mutta oikeille ihmisille tämä on iso mahdollisuus.</p>
+      <p class="mid" style="font-size:clamp(22px,6.4cqw,30px);margin-top:6px">Oletko tehnyt myyntiä aiemmin?</p>
+      <div class="choices"><button type="button" class="choice" data-role="myyja">Kyllä <span>Tele tai kenttä</span></button><button type="button" class="choice" data-role="buukkaaja">En vielä <span>Ei haittaa</span></button></div></div>` },
+    { id:"role", type:"auto", v:"lava", secs:5, html:`<div class="front rise"><span class="eyebrow">Sinun lähtöruutusi</span><p class="huge" style="font-size:clamp(48px,15cqw,84px);text-transform:uppercase">${roleName}<span class="o">.</span></p>
+      <p class="lead">${b ? "Tiedät jo, miten kaupat tehdään. Tee niitä isommin, kovemman porukan kanssa." : "Kokemusta ei tarvita. Opit puhumaan kenelle tahansa ja kestämään ein."}</p></div>` },
+    { id:"video", type:"video", v:"haastattelu", html:`<div class="front rise" style="padding-right:150px"><span class="eyebrow">Katso · 30 s</span></div>` },
+    { id:"earn", type:"auto", v:"matka", html:`<div class="front rise"><span class="eyebrow">Earn your dream</span><p class="big">Kovimmat tekijät palkitaan.</p><p class="lead">Kukaan ei kanna sinua. Mutta kukaan ei myöskään rajoita sinua.</p></div>` },
+    { id:"q2", type:"wait", v:"sali", html:`<div class="front rise"><span class="eyebrow">Viimeinen kysymys</span><p class="mid">Missä asut?</p><p class="lead" style="font-size:15px">Sinun ei tarvitse muuttaa minnekään päästäksesi eteenpäin.</p>
+      <div class="cities">${CONFIG.cities.map((c,i) => `<button type="button" class="city ${S.city&&S.city[0]===c[0]?"sel":""}" data-city="${i}">${esc(c[0])}</button>`).join("")}<button type="button" class="city" data-city="-1">Muu</button></div></div>` },
+    { id:"final", type:"wait", v:"gaala", scroll:true, html: S.sent ? `<div class="front rise"><span class="eyebrow">Hakemus vastaanotettu</span><p class="huge" style="font-size:clamp(52px,16cqw,92px)">Kiitos${S.sent ? ", " + esc(S.sent) : ""}<span class="o">.</span></p>
+      <p class="lead">Otamme sinuun yhteyttä pian. Sillä välin voit katsoa, mitä meillä tapahtuu.</p>
+      <div class="row"><a class="textbtn" href="${CONFIG.instagram}" target="_blank" rel="noopener">Seuraa @dream.on.group</a></div></div>`
+      : `<div class="front rise"><span class="eyebrow">${S.city ? esc(S.city[1]) + " eteenpäin" : "Mistä vain eteenpäin"}</span><p class="huge" style="font-size:clamp(46px,13cqw,80px)">Tee siitä <span class="o">totta.</span></p>
+      <form class="lead-form" id="leadForm" novalidate>
+        <p class="formhead">Hae ${b ? "myyjäksi" : "buukkaajaksi"}. Jätä yhteystietosi, niin otamme yhteyttä.</p>
+        <label class="fld"><span>Nimi</span><input id="f_name" name="nimi" autocomplete="name" required></label>
+        <label class="fld"><span>Puhelin</span><input id="f_phone" name="puhelin" type="tel" autocomplete="tel" inputmode="tel" required></label>
+        <label class="fld"><span>Sähköposti</span><input id="f_email" name="sahkoposti" type="email" autocomplete="email" inputmode="email" required></label>
+        ${S.city ? "" : `<label class="fld"><span>Paikkakunta</span><input id="f_city" name="paikkakunta" autocomplete="address-level2"></label>`}
+        <label class="consent"><input id="f_ok" type="checkbox" required><span>Hyväksyn, että Dream On Group käsittelee tietojani rekrytointia varten. <a href="${esc(CONFIG.privacyUrl)}" target="_blank" rel="noopener">Tietosuojaseloste</a></span></label>
+        <p class="ferr" id="ferr" role="alert"></p>
+        <button class="cta" type="submit" id="fsend">Lähetä hakemus <span aria-hidden="true">→</span></button>
+      </form>
+      <div class="row"><a class="textbtn" href="${CONFIG.instagram}" target="_blank" rel="noopener">Lisää videoita @dream.on.group</a><button type="button" class="textbtn" id="restart">Alusta</button></div></div>` }
+  ];
+}
+
+/* ===== Moottori ===== */
+const stage = $("#stage"), scenesEl = $("#scenes"), barsEl = $("#bars"), soundBtn = $("#sound"), shade = $("#shade");
+let list = scenes(), idx = 0, t0 = 0, elapsed = 0, paused = false;
+function drawBars(){ barsEl.innerHTML = list.map((_, i) => `<i class="${i < idx ? "done" : ""}"><b></b></i>`).join(""); }
+function show(i){
+  idx = Math.max(0, Math.min(list.length - 1, i));
+  list = scenes(); const s = list[idx];
+  scenesEl.innerHTML = `<section class="scene ${s.top ? "top" : ""} ${s.scroll ? "scroll" : ""}" data-id="${s.id}" aria-live="polite">${s.html}</section>`;
+  requestAnimationFrame(() => { const el = scenesEl.firstElementChild; if (el) el.classList.add("on"); });
+  drawBars(); elapsed = 0; t0 = performance.now(); paused = false;
+  stage.classList.toggle("nozones", s.type === "wait");
+  stage.classList.toggle("narrow", s.type === "video");
+  shade.classList.toggle("full", s.type === "video");
+  soundBtn.hidden = s.type !== "video";
+  if (s.type === "video") { V.haastattelu.muted = true; soundBtn.textContent = "Ääni päälle"; }
+  playVideo(s.v);
+  bindScene();
+}
+function tick(now){
+  const s = list[idx]; const bar = barsEl.children[idx] && barsEl.children[idx].firstElementChild;
+  if (s && bar) {
+    if (s.type === "auto" && !paused) {
+      const p = Math.min(1, (elapsed + now - t0) / ((s.secs || CONFIG.sceneSeconds) * 1000));
+      bar.style.width = (p * 100) + "%"; if (p >= 1) next();
+    } else if (s.type === "video") {
+      const v = V.haastattelu; const p = v.duration ? v.currentTime / v.duration : 0;
+      bar.style.width = (p * 100) + "%"; if (v.ended) next();
+    } else bar.style.width = "100%";
+  }
+  requestAnimationFrame(tick);
+}
+function next(){ if (list[idx].id === "q1" && !S.role) return; if (idx < list.length - 1) show(idx + 1); }
+function prev(){ show(idx - 1); }
+function pause(){ if (paused) return; paused = true; elapsed += performance.now() - t0; if (currentV) currentV.pause(); }
+function resume(){ if (!paused) return; paused = false; t0 = performance.now(); if (currentV) { const p = currentV.play(); if (p && p.catch) p.catch(() => {}); } }
+function bindScene(){
+  scenesEl.querySelectorAll("[data-role]").forEach(btn => btn.addEventListener("click", () => { S.role = btn.dataset.role; btn.classList.add("sel"); setTimeout(() => show(idx + 1), 220); }));
+  scenesEl.querySelectorAll("[data-city]").forEach(btn => btn.addEventListener("click", () => { const i = Number(btn.dataset.city); S.city = i >= 0 ? CONFIG.cities[i] : null; btn.classList.add("sel"); setTimeout(() => show(idx + 1), 220); }));
+  const r = document.getElementById("restart"); if (r) r.addEventListener("click", () => { S.role = null; S.city = null; S.sent = null; show(0); });
+  const f = document.getElementById("leadForm"); if (f) f.addEventListener("submit", submitLead);
+}
+async function submitLead(e){
+  e.preventDefault();
+  const val = id => { const el = document.getElementById(id); return el ? el.value.trim() : ""; };
+  const err = document.getElementById("ferr"), btn = document.getElementById("fsend");
+  const name = val("f_name"), phone = val("f_phone"), email = val("f_email");
+  const ok = document.getElementById("f_ok").checked;
+  let msg = "";
+  if (name.length < 2) msg = "Kirjoita nimesi.";
+  else if (phone.replace(/[^0-9]/g, "").length < 7) msg = "Tarkista puhelinnumero.";
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) msg = "Tarkista sähköpostiosoite.";
+  else if (!ok) msg = "Hyväksy tietojen käsittely, niin voimme ottaa yhteyttä.";
+  err.textContent = msg; if (msg) return;
+  const data = {
+    nimi: name, etunimi: name.split(/\s+/)[0], sukunimi: name.split(/\s+/).slice(1).join(" "), puhelin: phone, sahkoposti: email,
+    tagit: ["DO Stories", S.role === "myyja" ? "Myyjä" : "Buukkaaja", S.city ? S.city[0] : val("f_city")].filter(Boolean).join(","),
+    rooli: S.role || "buukkaaja", myyntikokemus: S.role === "myyja" ? "kyllä" : "ei",
+    paikkakunta: S.city ? S.city[0] : val("f_city"),
+    utm_source: params.get("utm_source") || "", utm_medium: params.get("utm_medium") || "", utm_campaign: params.get("utm_campaign") || "", utm_content: params.get("utm_content") || "",
+    sivu: location.href.split("#")[0], aika: new Date().toISOString()
+  };
+  btn.disabled = true; btn.textContent = "Lähetetään...";
+  try {
+    const isPreview = /claude|claudeusercontent|anthropic/i.test(location.hostname) || location.protocol.indexOf("http") !== 0;
+    if (CONFIG.webhook && !isPreview) {
+      await fetch(CONFIG.webhook, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams(data).toString() });
+    } else {
+      console.log("[DO] Esikatselu: lomaketta ei lähetetty", data);
+      await new Promise(r => setTimeout(r, 600));
+    }
+    S.sent = name.split(" ")[0]; show(idx);
+  } catch (x) {
+    btn.disabled = false; btn.innerHTML = 'Lähetä hakemus <span aria-hidden="true">→</span>';
+    err.textContent = "Lähetys ei onnistunut. Tarkista verkkoyhteys ja yritä uudelleen.";
+  }
+}
+soundBtn.addEventListener("click", () => { const v = V.haastattelu; v.muted = !v.muted; soundBtn.textContent = v.muted ? "Ääni päälle" : "Ääni pois"; const p = v.play(); if (p && p.catch) p.catch(() => {}); });
+
+let downAt = 0, sx = 0;
+function zoneDown(e){ downAt = performance.now(); sx = e.clientX; pause(); }
+function zoneUp(dir){ return e => { const held = performance.now() - downAt > 350; const dx = e.clientX - sx; resume(); if (Math.abs(dx) > 60) { dx < 0 ? next() : prev(); return; } if (!held) dir > 0 ? next() : prev(); }; }
+["tprev","tnext"].forEach((id, k) => { const z = document.getElementById(id); z.addEventListener("pointerdown", zoneDown); z.addEventListener("pointerup", zoneUp(k ? 1 : -1)); z.addEventListener("pointercancel", resume); });
+let gx = null;
+stage.addEventListener("pointerdown", e => { if (stage.classList.contains("nozones")) gx = e.clientX; });
+stage.addEventListener("pointerup", e => { if (gx === null) return; const dx = e.clientX - gx; gx = null; if (dx > 70) prev(); else if (dx < -70 && list[idx].id !== "final") next(); });
+document.addEventListener("keydown", e => { if (e.key === "ArrowRight" || e.key === " ") { e.preventDefault(); next(); } if (e.key === "ArrowLeft") prev(); });
+document.addEventListener("visibilitychange", () => document.hidden ? pause() : resume());
+$("#skip").addEventListener("click", () => show(list.length - 1));
+show(0); requestAnimationFrame(tick);
+})();
+</script>
+
+
+</body>
+</html>
