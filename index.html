@@ -156,7 +156,7 @@ a{color:inherit}
 .shade.full{background:linear-gradient(180deg,rgba(0,0,0,.55) 0,rgba(0,0,0,0) 22%,rgba(0,0,0,0) 70%,rgba(0,0,0,.75) 100%)}
 .scene{z-index:2;justify-content:flex-end;padding-bottom:calc(40px + env(safe-area-inset-bottom,0px))}
 .scene.top{justify-content:flex-start}
-.sound{position:absolute;right:16px;bottom:calc(96px + env(safe-area-inset-bottom,0px));z-index:6;display:flex;align-items:center;gap:8px;font-family:var(--display);font-size:12px;letter-spacing:.16em;text-transform:uppercase;padding:12px 14px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.4);backdrop-filter:blur(6px)}
+.sound{position:absolute;right:12px;top:calc(62px + env(safe-area-inset-top,0px));padding:8px 10px !important;font-size:11px !important;z-index:6;display:flex;align-items:center;gap:8px;font-family:var(--display);font-size:12px;letter-spacing:.16em;text-transform:uppercase;padding:12px 14px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.4);backdrop-filter:blur(6px)}
 .sound[hidden]{display:none}
 .lead{color:rgba(255,255,255,.82)}
 .choice{background:rgba(0,0,0,.45);backdrop-filter:blur(6px)}
@@ -211,6 +211,8 @@ const CONFIG = {
     juhla: "assets/video/c1-juhla.mp4", lava: "assets/video/c2-lava.mp4", haastattelu: "assets/video/c3-haastattelu.mp4",
     matka: "assets/video/c4-matka.mp4", sali: "assets/video/c5-sali.mp4", gaala: "assets/video/c6-gaala.mp4"
   },
+  /* Erilliset ääniraidat (videot itse ovat äänettömiä) */
+  audio: { lava: "assets/video/c2-lava.m4a", sali: "assets/video/c5-sali.m4a" },
   posters: {
     juhla: "assets/video/c1-juhla.jpg", lava: "assets/video/c2-lava.jpg", haastattelu: "assets/video/c3-haastattelu.jpg",
     matka: "assets/video/c4-matka.jpg", sali: "assets/video/c5-sali.jpg", gaala: "assets/video/c6-gaala.jpg"
@@ -251,13 +253,20 @@ Object.keys(CONFIG.videos).forEach(k => {
   v.loop = k !== "haastattelu";
   vlayer.appendChild(v); V[k] = v;
 });
-let currentV = null;
+const A = {};
+Object.keys(CONFIG.audio || {}).forEach(k => { const a = new Audio(CONFIG.audio[k]); a.loop = true; a.preload = "auto"; A[k] = a; });
+let currentV = null, currentK = null, soundOn = false, soundTouched = false;
+function syncAudio(){ Object.keys(A).forEach(n => { const a = A[n]; if (n === currentK && soundOn) { const v = V[n]; try { if (v && Math.abs(a.currentTime - v.currentTime) > 0.3) a.currentTime = v.currentTime; } catch (e) {} const p = a.play(); if (p && p.catch) p.catch(() => {}); } else a.pause(); }); }
+function setSound(on){ soundOn = on; Object.keys(V).forEach(n => { V[n].muted = !on || !!A[n]; }); syncAudio(); const b = document.getElementById("sound"); if (b) { b.textContent = on ? "Ääni pois" : "Ääni päälle"; b.setAttribute("aria-pressed", on ? "true" : "false"); } if (on && currentV) { const p = currentV.play(); if (p && p.catch) p.catch(() => {}); } }
+function firstTouch(){ if (soundTouched) return; soundTouched = true; setSound(true); }
 function playVideo(k){
   Object.keys(V).forEach(n => { if (n !== k) { V[n].classList.remove("on"); V[n].pause(); } });
-  const v = V[k]; currentV = v; if (!v) return;
-  v.classList.add("on");
+  const v = V[k]; currentV = v; currentK = k; if (!v) return;
+  v.classList.add("on"); v.muted = !soundOn || !!A[k];
   if (k === "haastattelu") { try { v.currentTime = 0; } catch (e) {} }
   const p = v.play(); if (p && p.catch) p.catch(() => {});
+  try { if (A[k]) A[k].currentTime = 0; } catch (e) {}
+  syncAudio();
 }
 
 /* ===== Ruudut ===== */
@@ -304,8 +313,7 @@ function show(i){
   stage.classList.toggle("nozones", s.type === "wait");
   stage.classList.toggle("narrow", s.type === "video");
   shade.classList.toggle("full", s.type === "video");
-  soundBtn.hidden = s.type !== "video";
-  if (s.type === "video") { V.haastattelu.muted = true; soundBtn.textContent = "Ääni päälle"; }
+  soundBtn.hidden = false;
   playVideo(s.v);
   bindScene();
 }
@@ -324,8 +332,8 @@ function tick(now){
 }
 function next(){ if (list[idx].id === "q1" && !S.role) return; if (idx < list.length - 1) show(idx + 1); }
 function prev(){ show(idx - 1); }
-function pause(){ if (paused) return; paused = true; elapsed += performance.now() - t0; if (currentV) currentV.pause(); }
-function resume(){ if (!paused) return; paused = false; t0 = performance.now(); if (currentV) { const p = currentV.play(); if (p && p.catch) p.catch(() => {}); } }
+function pause(){ if (paused) return; paused = true; elapsed += performance.now() - t0; if (currentV) currentV.pause(); if (A[currentK]) A[currentK].pause(); }
+function resume(){ if (!paused) return; paused = false; t0 = performance.now(); if (currentV) { const p = currentV.play(); if (p && p.catch) p.catch(() => {}); } syncAudio(); }
 function bindScene(){
   scenesEl.querySelectorAll("[data-role]").forEach(btn => btn.addEventListener("click", () => { S.role = btn.dataset.role; btn.classList.add("sel"); setTimeout(() => show(idx + 1), 220); }));
   scenesEl.querySelectorAll("[data-city]").forEach(btn => btn.addEventListener("click", () => { const i = Number(btn.dataset.city); S.city = i >= 0 ? CONFIG.cities[i] : null; btn.classList.add("sel"); setTimeout(() => show(idx + 1), 220); }));
@@ -367,7 +375,9 @@ async function submitLead(e){
     err.textContent = "Lähetys ei onnistunut. Tarkista verkkoyhteys ja yritä uudelleen.";
   }
 }
-soundBtn.addEventListener("click", () => { const v = V.haastattelu; v.muted = !v.muted; soundBtn.textContent = v.muted ? "Ääni päälle" : "Ääni pois"; const p = v.play(); if (p && p.catch) p.catch(() => {}); });
+soundBtn.addEventListener("click", e => { e.stopPropagation(); soundTouched = true; setSound(!soundOn); });
+stage.addEventListener("pointerdown", e => { if (!e.target.closest("#sound")) firstTouch(); }, true);
+document.addEventListener("keydown", () => firstTouch(), true);
 
 let downAt = 0, sx = 0;
 function zoneDown(e){ downAt = performance.now(); sx = e.clientX; pause(); }
