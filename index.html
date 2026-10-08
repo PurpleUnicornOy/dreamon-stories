@@ -371,7 +371,16 @@ async function submitLead(e){
   err.textContent = msg; if (msg) return;
   const data = {
     nimi: name, etunimi: name.split(/\s+/)[0], sukunimi: name.split(/\s+/).slice(1).join(" "), puhelin: phone, sahkoposti: email,
-    tagit: ["DO Stories", S.role === "myyja" ? "Myyjä" : "Buukkaaja", S.city ? S.city[0] : val("f_city"), S.exp ? "Kokemus: " + S.exp : ""].filter(Boolean).join(","),
+    tagit: "DO Stories",
+    muistiinpano: [
+      "Hakemus: DO Stories",
+      "Rooli: " + (S.role === "myyja" ? "Myyjä" : "Buukkaaja"),
+      (S.role === "myyja" ? "Myyntikokemus: " : "Työkokemus: ") + (S.exp || "-"),
+      "Miksi haluaa Dream Onille töihin: " + (S.why || "-"),
+      "Mikä motivoi eniten: " + (S.mot || "-"),
+      "Paikkakunta: " + ((S.city ? S.city[0] : val("f_city")) || "-"),
+      params.get("utm_source") ? "Lähde: " + [params.get("utm_source"), params.get("utm_campaign")].filter(Boolean).join(" / ") : ""
+    ].filter(Boolean).join("\n"),
     kokemus: S.exp || "", miksi_do: S.why || "", motivaatio: S.mot || "",
     rooli: S.role || "buukkaaja", myyntikokemus: S.role === "myyja" ? "kyllä" : "ei",
     paikkakunta: S.city ? S.city[0] : val("f_city"),
