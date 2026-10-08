@@ -84,6 +84,9 @@ a{color:inherit}
 
 /* Vastauspainikkeet */
 .choices{display:grid;gap:10px;margin-top:8px}
+.choices.mini{grid-template-columns:1fr 1fr;gap:8px;margin-top:2px}
+.choices.mini .choice{padding:13px 12px;font-size:13px;letter-spacing:.06em;line-height:1.15;min-height:52px}
+.choices.mini .choice:last-child:nth-child(odd){grid-column:1/-1}
 .choice{display:flex;justify-content:space-between;align-items:center;padding:20px 20px;border:1px solid rgba(255,255,255,.4);font-family:var(--display);font-size:18px;letter-spacing:.1em;text-transform:uppercase;text-align:left;transition:background .2s,border-color .2s,color .2s}
 .choice:hover,.choice.sel{background:var(--orange);border-color:var(--orange)}
 .choice span{font-family:var(--body);letter-spacing:0;text-transform:none;font-size:14px;color:var(--muted)}
@@ -231,7 +234,11 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 let params; try { params = new URLSearchParams(location.search); } catch (e) { params = new URLSearchParams(); }
 const slug = s => s.toLowerCase().replace(/ä/g,"a").replace(/ö/g,"o").replace(/å/g,"a").replace(/[^a-z]/g,"");
-const S = { role: null, city: null, sent: null };
+const S = { role: null, city: null, sent: null, exp: null, why: null, mot: null };
+const EXP_MYYJA = ["Puhelinmyynti", "Kenttämyynti", "Ständi- tai tapahtumamyynti", "B2B-myynti", "Muu myynti"];
+const WHY = ["Haluan oppia myymään", "Haluan edetä nopeasti", "Kova porukka ympärille", "Tulos ratkaisee, ei tausta"];
+const MOT = ["Voittaminen ja kilpailu", "Omat unelmat ja tavoitteet", "Raha ja vapaus", "Tunnustus ja palkinnot", "Oma kehittyminen"];
+const EXP_BUUKKAAJA = ["Asiakaspalvelu", "Kauppa tai kassa", "Ravintola-ala", "Muu työkokemus", "Ei vielä työkokemusta"];
 const pre = params.get("kaupunki");
 if (pre) { const c = CONFIG.cities.find(c => slug(c[0]) === slug(pre)); if (c) S.city = c; }
 
@@ -276,10 +283,14 @@ function scenes(){
     { id:"q1", type:"wait", v:"juhla", html:`<div class="front rise"><span class="eyebrow">Haku auki · Koko Suomi</span><h1 class="huge">Dream on.<br><span class="o">DO.</span></h1><p class="lead">Tämä ei ole kaikille. Mutta oikeille ihmisille tämä on iso mahdollisuus.</p>
       <p class="mid" style="font-size:clamp(22px,6.4cqw,30px);margin-top:6px">Oletko tehnyt myyntiä aiemmin?</p>
       <div class="choices"><button type="button" class="choice" data-role="myyja">Kyllä <span>Tele tai kenttä</span></button><button type="button" class="choice" data-role="buukkaaja">En vielä <span>Ei haittaa</span></button></div></div>` },
-    { id:"role", type:"auto", v:"lava", secs:5, html:`<div class="front rise"><span class="eyebrow">Sinun lähtöruutusi</span><p class="huge" style="font-size:clamp(48px,15cqw,84px);text-transform:uppercase">${roleName}<span class="o">.</span></p>
-      <p class="lead">${b ? "Tiedät jo, miten kaupat tehdään. Tee niitä isommin, kovemman porukan kanssa." : "Kokemusta ei tarvita. Opit puhumaan kenelle tahansa ja kestämään ein."}</p></div>` },
-    { id:"video", type:"video", v:"haastattelu", html:`<div class="front rise" style="padding-right:150px"><span class="eyebrow">Katso · 30 s</span></div>` },
-    { id:"earn", type:"auto", v:"matka", html:`<div class="front rise"><span class="eyebrow">Earn your dream</span><p class="big">Kovimmat tekijät palkitaan.</p><p class="lead">Kukaan ei kanna sinua. Mutta kukaan ei myöskään rajoita sinua.</p></div>` },
+    { id:"role", type:"wait", v:"lava", html:`<div class="front rise"><span class="eyebrow">Sinun lähtöruutusi</span><p class="huge" style="font-size:clamp(44px,13cqw,76px);text-transform:uppercase">${roleName}<span class="o">.</span></p>
+      <p class="mid" style="font-size:clamp(20px,5.8cqw,28px);margin-top:4px">${b ? "Millaista myyntikokemusta sinulla on?" : "Millaista työkokemusta sinulla on?"}</p>
+      <div class="choices mini">${(b ? EXP_MYYJA : EXP_BUUKKAAJA).map(x => `<button type="button" class="choice ${S.exp===x?"sel":""}" data-ans="exp" data-val="${esc(x)}">${esc(x)}</button>`).join("")}</div></div>` },
+    { id:"video", type:"video", v:"haastattelu", html:`<div class="front rise"><span class="eyebrow">Katso · 30 s</span><p class="mid" style="font-size:clamp(20px,5.8cqw,28px)">Miksi haluat Dream Onille töihin?</p>
+      <div class="choices mini">${WHY.map(x => `<button type="button" class="choice ${S.why===x?"sel":""}" data-ans="why" data-val="${esc(x)}">${esc(x)}</button>`).join("")}</div></div>` },
+    { id:"earn", type:"wait", v:"matka", html:`<div class="front rise"><span class="eyebrow">Earn your dream</span><p class="big">Kovimmat tekijät palkitaan.</p><p class="lead">Kukaan ei kanna sinua. Mutta kukaan ei myöskään rajoita sinua.</p>
+      <p class="mid" style="font-size:clamp(20px,5.8cqw,28px);margin-top:4px">Mikä sinua motivoi eniten?</p>
+      <div class="choices mini">${MOT.map(x => `<button type="button" class="choice ${S.mot===x?"sel":""}" data-ans="mot" data-val="${esc(x)}">${esc(x)}</button>`).join("")}</div></div>` },
     { id:"q2", type:"wait", v:"sali", html:`<div class="front rise"><span class="eyebrow">Viimeinen kysymys</span><p class="mid">Missä asut?</p><p class="lead" style="font-size:15px">Sinun ei tarvitse muuttaa minnekään päästäksesi eteenpäin.</p>
       <div class="cities">${CONFIG.cities.map((c,i) => `<button type="button" class="city ${S.city&&S.city[0]===c[0]?"sel":""}" data-city="${i}">${esc(c[0])}</button>`).join("")}<button type="button" class="city" data-city="-1">Muu</button></div></div>` },
     { id:"final", type:"wait", v:"gaala", scroll:true, html: S.sent ? `<div class="front rise"><span class="eyebrow">Hakemus vastaanotettu</span><p class="huge" style="font-size:clamp(52px,16cqw,92px)">Kiitos${S.sent ? ", " + esc(S.sent) : ""}<span class="o">.</span></p>
@@ -310,7 +321,7 @@ function show(i){
   scenesEl.innerHTML = `<section class="scene ${s.top ? "top" : ""} ${s.scroll ? "scroll" : ""}" data-id="${s.id}" aria-live="polite">${s.html}</section>`;
   requestAnimationFrame(() => { const el = scenesEl.firstElementChild; if (el) el.classList.add("on"); });
   drawBars(); elapsed = 0; t0 = performance.now(); paused = false;
-  stage.classList.toggle("nozones", s.type === "wait");
+  stage.classList.toggle("nozones", s.type === "wait" || s.id === "video");
   stage.classList.toggle("narrow", s.type === "video");
   shade.classList.toggle("full", s.type === "video");
   soundBtn.hidden = s.type !== "video";
@@ -325,19 +336,20 @@ function tick(now){
       bar.style.width = (p * 100) + "%"; if (p >= 1) next();
     } else if (s.type === "video") {
       const v = V.haastattelu; const p = v.duration ? v.currentTime / v.duration : 0;
-      bar.style.width = (p * 100) + "%"; if (v.ended) next();
+      bar.style.width = (p * 100) + "%"; if (v.ended && S.why) next();
     } else bar.style.width = "100%";
   }
   requestAnimationFrame(tick);
 }
-function next(){ if (list[idx].id === "q1" && !S.role) return; if (idx < list.length - 1) show(idx + 1); }
+function next(){ if (list[idx].id === "q1" && !S.role) return; const need = { role: "exp", video: "why", earn: "mot" }[list[idx].id]; if (need && !S[need]) return; if (idx < list.length - 1) show(idx + 1); }
 function prev(){ show(idx - 1); }
 function pause(){ if (paused) return; paused = true; elapsed += performance.now() - t0; if (currentV) currentV.pause(); if (A[currentK]) A[currentK].pause(); }
 function resume(){ if (!paused) return; paused = false; t0 = performance.now(); if (currentV) { const p = currentV.play(); if (p && p.catch) p.catch(() => {}); } syncAudio(); }
 function bindScene(){
-  scenesEl.querySelectorAll("[data-role]").forEach(btn => btn.addEventListener("click", () => { S.role = btn.dataset.role; btn.classList.add("sel"); setTimeout(() => show(idx + 1), 220); }));
+  scenesEl.querySelectorAll("[data-role]").forEach(btn => btn.addEventListener("click", () => { if (S.role !== btn.dataset.role) S.exp = null; S.role = btn.dataset.role; btn.classList.add("sel"); setTimeout(() => show(idx + 1), 220); }));
+  scenesEl.querySelectorAll("[data-ans]").forEach(btn => btn.addEventListener("click", () => { S[btn.dataset.ans] = btn.dataset.val; btn.classList.add("sel"); setTimeout(() => show(idx + 1), 220); }));
   scenesEl.querySelectorAll("[data-city]").forEach(btn => btn.addEventListener("click", () => { const i = Number(btn.dataset.city); S.city = i >= 0 ? CONFIG.cities[i] : null; btn.classList.add("sel"); setTimeout(() => show(idx + 1), 220); }));
-  const r = document.getElementById("restart"); if (r) r.addEventListener("click", () => { S.role = null; S.city = null; S.sent = null; show(0); });
+  const r = document.getElementById("restart"); if (r) r.addEventListener("click", () => { S.role = null; S.city = null; S.sent = null; S.exp = null; S.why = null; S.mot = null; show(0); });
   const f = document.getElementById("leadForm"); if (f) f.addEventListener("submit", submitLead);
 }
 async function submitLead(e){
@@ -354,7 +366,8 @@ async function submitLead(e){
   err.textContent = msg; if (msg) return;
   const data = {
     nimi: name, etunimi: name.split(/\s+/)[0], sukunimi: name.split(/\s+/).slice(1).join(" "), puhelin: phone, sahkoposti: email,
-    tagit: ["DO Stories", S.role === "myyja" ? "Myyjä" : "Buukkaaja", S.city ? S.city[0] : val("f_city")].filter(Boolean).join(","),
+    tagit: ["DO Stories", S.role === "myyja" ? "Myyjä" : "Buukkaaja", S.city ? S.city[0] : val("f_city"), S.exp ? "Kokemus: " + S.exp : "", S.why ? "Miksi DO: " + S.why : "", S.mot ? "Motivaatio: " + S.mot : ""].filter(Boolean).join(","),
+    kokemus: S.exp || "", miksi_do: S.why || "", motivaatio: S.mot || "",
     rooli: S.role || "buukkaaja", myyntikokemus: S.role === "myyja" ? "kyllä" : "ei",
     paikkakunta: S.city ? S.city[0] : val("f_city"),
     utm_source: params.get("utm_source") || "", utm_medium: params.get("utm_medium") || "", utm_campaign: params.get("utm_campaign") || "", utm_content: params.get("utm_content") || "",
