@@ -174,6 +174,11 @@ a{color:inherit}
 .fld{display:grid;gap:4px}
 .fld span{font-family:var(--display);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--steel)}
 .fld input{width:100%;font:16px var(--body);color:var(--white);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.25);border-radius:0;padding:12px}
+.why{display:grid;gap:10px;margin-top:2px}
+.why textarea{width:100%;font:16px/1.4 var(--body);color:var(--white);background:rgba(0,0,0,.45);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.4);border-radius:0;padding:12px;resize:none}
+.why textarea:focus{border-color:var(--orange);outline:none}
+.why .cta{padding:15px}
+.why .ferr:empty{display:none}
 .fld input:focus{border-color:var(--orange);outline:none}
 .consent{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;font-size:13px;color:var(--muted);line-height:1.4}
 .consent input{width:18px;height:18px;margin-top:1px;accent-color:var(--orange)}
@@ -236,7 +241,6 @@ let params; try { params = new URLSearchParams(location.search); } catch (e) { p
 const slug = s => s.toLowerCase().replace(/ä/g,"a").replace(/ö/g,"o").replace(/å/g,"a").replace(/[^a-z]/g,"");
 const S = { role: null, city: null, sent: null, exp: null, why: null, mot: null };
 const EXP_MYYJA = ["Puhelinmyynti", "Kenttämyynti", "Ständi- tai tapahtumamyynti", "B2B-myynti", "Muu myynti"];
-const WHY = ["Haluan oppia myymään", "Haluan edetä nopeasti", "Kova porukka ympärille", "Tulos ratkaisee, ei tausta"];
 const MOT = ["Voittaminen ja kilpailu", "Omat unelmat ja tavoitteet", "Raha ja vapaus", "Tunnustus ja palkinnot", "Oma kehittyminen"];
 const EXP_BUUKKAAJA = ["Asiakaspalvelu", "Kauppa tai kassa", "Ravintola-ala", "Muu työkokemus", "Ei vielä työkokemusta"];
 const pre = params.get("kaupunki");
@@ -287,7 +291,7 @@ function scenes(){
       <p class="mid" style="font-size:clamp(20px,5.8cqw,28px);margin-top:4px">${b ? "Millaista myyntikokemusta sinulla on?" : "Millaista työkokemusta sinulla on?"}</p>
       <div class="choices mini">${(b ? EXP_MYYJA : EXP_BUUKKAAJA).map(x => `<button type="button" class="choice ${S.exp===x?"sel":""}" data-ans="exp" data-val="${esc(x)}">${esc(x)}</button>`).join("")}</div></div>` },
     { id:"video", type:"video", v:"haastattelu", html:`<div class="front rise"><span class="eyebrow">Katso · 30 s</span><p class="mid" style="font-size:clamp(20px,5.8cqw,28px)">Miksi haluat Dream Onille töihin?</p>
-      <div class="choices mini">${WHY.map(x => `<button type="button" class="choice ${S.why===x?"sel":""}" data-ans="why" data-val="${esc(x)}">${esc(x)}</button>`).join("")}</div></div>` },
+      <form class="why" id="whyForm" novalidate><textarea id="f_why" rows="3" maxlength="600" placeholder="Kirjoita omin sanoin">${esc(S.why || "")}</textarea><p class="ferr" id="whyErr" role="alert"></p><button class="cta" type="submit">Jatka <span aria-hidden="true">→</span></button></form></div>` },
     { id:"earn", type:"wait", v:"matka", html:`<div class="front rise"><span class="eyebrow">Earn your dream</span><p class="big">Kovimmat tekijät palkitaan.</p><p class="lead">Kukaan ei kanna sinua. Mutta kukaan ei myöskään rajoita sinua.</p>
       <p class="mid" style="font-size:clamp(20px,5.8cqw,28px);margin-top:4px">Mikä sinua motivoi eniten?</p>
       <div class="choices mini">${MOT.map(x => `<button type="button" class="choice ${S.mot===x?"sel":""}" data-ans="mot" data-val="${esc(x)}">${esc(x)}</button>`).join("")}</div></div>` },
@@ -350,6 +354,7 @@ function bindScene(){
   scenesEl.querySelectorAll("[data-ans]").forEach(btn => btn.addEventListener("click", () => { S[btn.dataset.ans] = btn.dataset.val; btn.classList.add("sel"); setTimeout(() => show(idx + 1), 220); }));
   scenesEl.querySelectorAll("[data-city]").forEach(btn => btn.addEventListener("click", () => { const i = Number(btn.dataset.city); S.city = i >= 0 ? CONFIG.cities[i] : null; btn.classList.add("sel"); setTimeout(() => show(idx + 1), 220); }));
   const r = document.getElementById("restart"); if (r) r.addEventListener("click", () => { S.role = null; S.city = null; S.sent = null; S.exp = null; S.why = null; S.mot = null; show(0); });
+  const wf = document.getElementById("whyForm"); if (wf) wf.addEventListener("submit", e => { e.preventDefault(); const v = document.getElementById("f_why").value.trim(); if (v.length < 3) { document.getElementById("whyErr").textContent = "Kerro muutamalla sanalla."; return; } S.why = v; show(idx + 1); });
   const f = document.getElementById("leadForm"); if (f) f.addEventListener("submit", submitLead);
 }
 async function submitLead(e){
@@ -366,7 +371,7 @@ async function submitLead(e){
   err.textContent = msg; if (msg) return;
   const data = {
     nimi: name, etunimi: name.split(/\s+/)[0], sukunimi: name.split(/\s+/).slice(1).join(" "), puhelin: phone, sahkoposti: email,
-    tagit: ["DO Stories", S.role === "myyja" ? "Myyjä" : "Buukkaaja", S.city ? S.city[0] : val("f_city"), S.exp ? "Kokemus: " + S.exp : "", S.why ? "Miksi DO: " + S.why : "", S.mot ? "Motivaatio: " + S.mot : ""].filter(Boolean).join(","),
+    tagit: ["DO Stories", S.role === "myyja" ? "Myyjä" : "Buukkaaja", S.city ? S.city[0] : val("f_city"), S.exp ? "Kokemus: " + S.exp : "", S.mot ? "Motivaatio: " + S.mot : ""].filter(Boolean).join(","),
     kokemus: S.exp || "", miksi_do: S.why || "", motivaatio: S.mot || "",
     rooli: S.role || "buukkaaja", myyntikokemus: S.role === "myyja" ? "kyllä" : "ei",
     paikkakunta: S.city ? S.city[0] : val("f_city"),
@@ -399,7 +404,7 @@ function zoneUp(dir){ return e => { const held = performance.now() - downAt > 35
 let gx = null;
 stage.addEventListener("pointerdown", e => { if (stage.classList.contains("nozones")) gx = e.clientX; });
 stage.addEventListener("pointerup", e => { if (gx === null) return; const dx = e.clientX - gx; gx = null; if (dx > 70) prev(); else if (dx < -70 && list[idx].id !== "final") next(); });
-document.addEventListener("keydown", e => { if (e.key === "ArrowRight" || e.key === " ") { e.preventDefault(); next(); } if (e.key === "ArrowLeft") prev(); });
+document.addEventListener("keydown", e => { if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return; if (e.key === "ArrowRight" || e.key === " ") { e.preventDefault(); next(); } if (e.key === "ArrowLeft") prev(); });
 document.addEventListener("visibilitychange", () => document.hidden ? pause() : resume());
 $("#skip").addEventListener("click", () => show(list.length - 1));
 show(0); requestAnimationFrame(tick);
