@@ -264,12 +264,12 @@ const A = {};
 Object.keys(CONFIG.audio || {}).forEach(k => { const a = new Audio(CONFIG.audio[k]); a.loop = true; a.preload = "auto"; A[k] = a; });
 let currentV = null, currentK = null, soundOn = false, soundTouched = false;
 function syncAudio(){ Object.keys(A).forEach(n => { const a = A[n]; if (n === currentK && soundOn) { const v = V[n]; try { if (v && Math.abs(a.currentTime - v.currentTime) > 0.3) a.currentTime = v.currentTime; } catch (e) {} const p = a.play(); if (p && p.catch) p.catch(() => {}); } else a.pause(); }); }
-function setSound(on){ soundOn = on; Object.keys(V).forEach(n => { V[n].muted = !on || !!A[n]; }); syncAudio(); const b = document.getElementById("sound"); if (b) { b.textContent = on ? "Ääni pois" : "Ääni päälle"; b.setAttribute("aria-pressed", on ? "true" : "false"); } if (on && currentV) { const p = currentV.play(); if (p && p.catch) p.catch(() => {}); } }
+function setSound(on){ soundOn = on; Object.keys(V).forEach(n => { V[n].muted = !on || n !== "haastattelu"; }); syncAudio(); const b = document.getElementById("sound"); if (b) { b.textContent = on ? "Ääni pois" : "Ääni päälle"; b.setAttribute("aria-pressed", on ? "true" : "false"); } if (on && currentV) { const p = currentV.play(); if (p && p.catch) p.catch(() => {}); } }
 function firstTouch(){ if (soundTouched) return; soundTouched = true; setSound(true); }
 function playVideo(k){
   Object.keys(V).forEach(n => { if (n !== k) { V[n].classList.remove("on"); V[n].pause(); } });
   const v = V[k]; currentV = v; currentK = k; if (!v) return;
-  v.classList.add("on"); v.muted = !soundOn || !!A[k];
+  v.classList.add("on"); v.muted = !soundOn || k !== "haastattelu";
   if (k === "haastattelu") { try { v.currentTime = 0; } catch (e) {} }
   const p = v.play(); if (p && p.catch) p.catch(() => {});
   try { if (A[k]) A[k].currentTime = 0; } catch (e) {}
